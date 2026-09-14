@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opdracht 2</title>
+</head>
+<body>
+    <h1>Opdracht 2</h1>
+
+    <h2>Opdracht 2a</h2>
+    <a href="./opdracht2a.js">Open opdracht2a.js</a>
+    <pre><code>const multiply = (a, b) =&gt; {
+    return a * b;
+};
+
+const greet = (name) =&gt; {
+    return `Hello, ` + name + `!`;
+};
+
+const double = (num) =&gt; {
+    return num * 2;
+};
+
+const filterEvens = (arr) =&gt; arr.filter(num =&gt; num % 2 === 0);
+
+console.log(multiply(3, 4));
+console.log(greet("Alice"));
+console.log(double(5));
+console.log(filterEvens([1, 2, 3, 4, 5, 6]));</code></pre>
+
+    <h2>Opdracht 2b</h2>
+    <a href="./opdracht2b.js">Open opdracht2b.js</a>
+    <pre><code>let globalVar = 10;
+
+let myObject = {
+    waarde: 5,
+    regularFunction: function() {
+        console.log(this.waarde);
+        console.log(globalVar);
+    },
+
+    arrowFunction: () =&gt; {
+        console.log(this.waarde);
+        console.log(globalVar);
+    }
+};
+
+myObject.regularFunction();
+myObject.arrowFunction();
+
+// regular = 5, 10
+// arrow = undefined, 10
+// ze kunnen allebij globalvar zien maar de arrow functie kan de waarde van 'this' niet zien omdat arrow functies geen 'this' hebben</code></pre>
+</body>
+</html>

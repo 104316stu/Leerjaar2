@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opdracht 1</title>
+</head>
+<body>
+    <h1>Opdracht 1</h1>
+
+    <h2>Opdracht 1a</h2>
+    <a href="./opdracht1a.js">Open opdracht1a.js</a>
+    <pre><code>let count = 0;
+count += 5;
+
+const name = "Floris";
+console.log(count, name);
+name = "Ebus";
+
+// de fout is opgetreden omdat je een const niet kan veranderen</code></pre>
+
+    <h2>Opdracht 1b</h2>
+    <a href="./opdracht1b.js">Open opdracht1b.js</a>
+    <pre><code>let globalVar = 10;
+
+const modifyVar = () =&gt; {
+    let localVar = 5;
+    let innerVar = 2;
+    console.log(globalVar, localVar, innerVar);
+}
+
+console.log(globalVar, localVar, innerVar)</code></pre>
+
+    <h2>Opdracht 1c</h2>
+    <a href="./opdracht1c.js">Open opdracht1c.js</a>
+    <pre><code>const PI = 3.14159;
+let PI = math.PI();
+
+// Uncaught SyntaxError: Identifier 'PI' has already been declared
+// omdat PI al door PI is gemaakt kan je hem niet nog een keer maken
+
+// const is goed omdat je het nooit kan veranderen zelfs perongeluk en je kan meteen zien dat de waarde nooit mag veranderd worden als je een keer er naar toe kijkt</code></pre>
+</body>
+</html>
