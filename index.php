@@ -49,6 +49,14 @@ foreach ($it as $file) {
     }
 }
 
+// A folder with both a *.git file and an index file is one project, not two:
+// keep the GitHub entry (it carries the description etc.), drop the local one.
+$githubFolders = array_column(array_filter($projects, fn ($p) => $p['type'] === 'github'), 'folder');
+$projects = array_values(array_filter(
+    $projects,
+    fn ($p) => $p['type'] === 'github' || !in_array($p['folder'], $githubFolders, true)
+));
+
 // Fetch GitHub data (served from cache unless GitHub reports changes).
 foreach ($projects as &$p) {
     if ($p['type'] !== 'github') {
