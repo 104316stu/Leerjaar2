@@ -16,6 +16,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Every "<folder>/<name>.git" file holds a GitHub URL. Clone that repo and
+      # put its files in that folder, so the folder becomes a working page.
+      - name: Pull linked repositories into their folders
+        run: |
+          set -e
+          find . -path ./.git -prune -o -type f -name '*.git' -print | while read -r file; do
+            dir=$(dirname "$file")
+            url=$(tr -d '[:space:]' < "$file")
+            case "$url" in
+              https://github.com/*) ;;
+              *) echo "skip $file: not a GitHub URL ($url)"; continue ;;
+            esac
+            echo "== $dir  <-  $url"
+            tmp=$(mktemp -d)
+            if git clone --depth 1 --quiet "$url" "$tmp"; then
+              rm -rf "$tmp/.git" "$tmp/.github"
+              cp -a "$tmp/." "$dir/"
+            else
+              echo "::warning file=$file::could not clone $url"
+            fi
+            rm -rf "$tmp"
+          done
+
       - name: Sync changed files to httpdocs
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
