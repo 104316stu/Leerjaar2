@@ -1,0 +1,2 @@
+# Cache files are for PHP only, never serve them over the web.
+Require all denied

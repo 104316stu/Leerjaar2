@@ -26,7 +26,6 @@ jobs:
           port: 21
           local-dir: ./
           server-dir: httpdocs/
-          # Only upload new/changed files; never delete anything on the server.
           state-name: .ftp-deploy-sync-state.json
           dangerous-clean-slate: false
           exclude: |
