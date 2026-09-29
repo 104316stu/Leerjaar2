@@ -39,6 +39,38 @@ jobs:
             rm -rf "$tmp"
           done
 
+      - name: Fetch GitHub metadata (authenticated)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          mkdir -p cache
+          echo '{}' > cache/github-data.json
+          find . -path ./.git -prune -o -type f -name '*.git' -print | while read -r file; do
+            url=$(tr -d '[:space:]' < "$file")
+            case "$url" in https://github.com/*) ;; *) continue ;; esac
+            slug=$(echo "$url" | sed -E 's#https://github.com/##; s#\.git$##; s#/$##' | tr 'A-Z' 'a-z')
+            if repo=$(gh api "repos/$slug" 2>/dev/null); then :; else repo=null; fi
+            if readme=$(gh api -H "Accept: application/vnd.github.html+json" "repos/$slug/readme" 2>/dev/null); then :; else readme=""; fi
+            jq --arg k "$slug" --argjson r "$repo" --arg m "$readme" \
+              '.[$k] = {repo: $r, readme: $m}' cache/github-data.json > /tmp/gd.json
+            mv /tmp/gd.json cache/github-data.json
+          done
+
+      - name: Write server config from secret
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          mkdir -p includes
+          cat > includes/config.local.php <<EOF
+          <?php
+          return [
+              'token' => '$GH_PAT',
+              'repo'  => '$GITHUB_REPOSITORY',
+              'file'  => 'deploy.yml',
+              'ref'   => 'main',
+          ];
+          EOF
+
       - name: Sync changed files to httpdocs
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:

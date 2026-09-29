@@ -58,14 +58,26 @@ $projects = array_values(array_filter(
 ));
 
 // Fetch GitHub data (served from cache unless GitHub reports changes).
+$dataFile  = __DIR__ . '/cache/github-data.json';
+$static    = is_file($dataFile) ? (json_decode(file_get_contents($dataFile), true) ?: []) : [];
+$fetchedAt = is_file($dataFile) ? (int) filemtime($dataFile) : 0;
+
 foreach ($projects as &$p) {
     if ($p['type'] !== 'github') {
         continue;
     }
-    $p['repo']   = github_repo($p['github']['owner'], $p['github']['repo']);
-    $p['readme'] = github_readme($p['github']['owner'], $p['github']['repo']);
+    $key = strtolower($p['github']['owner'] . '/' . $p['github']['repo']);
+    if (!empty($static[$key]['repo'])) {
+        // Data prepared by GitHub Actions, same shape github_get() returns.
+        $p['repo']   = ['data' => $static[$key]['repo'], 'status' => 200, 'from_cache' => true, 'fetched_at' => $fetchedAt, 'error' => null];
+        $p['readme'] = ['data' => $static[$key]['readme'] ?? '', 'status' => 200, 'from_cache' => true, 'fetched_at' => $fetchedAt, 'error' => null];
+    } else { // only used until the first deploy has produced the data file
+        $p['repo']   = github_repo($p['github']['owner'], $p['github']['repo']);
+        $p['readme'] = github_readme($p['github']['owner'], $p['github']['repo']);
+    }
 }
 unset($p);
+maybe_deploy($projects);
 
 usort($projects, fn ($a, $b) => [$a['category'], $a['title']] <=> [$b['category'], $b['title']]);
 
@@ -77,6 +89,70 @@ foreach ($projects as $p) {
 
 $githubCount = count(array_filter($projects, fn ($p) => $p['type'] === 'github'));
 $localCount  = count($projects) - $githubCount;
+
+function maybe_deploy(array $projects): void
+{
+    $cfgFile = __DIR__ . '/includes/config.local.php';
+    if (!is_file($cfgFile)) {
+        return;
+    }
+    $cfg       = require $cfgFile;
+    $stateFile = __DIR__ . '/cache/deploy-state.json';
+    $state     = is_file($stateFile) ? (json_decode(file_get_contents($stateFile), true) ?: []) : [];
+
+    // Check GitHub at most once per 60 seconds.
+    if (time() - (int) ($state['checked'] ?? 0) < 60) {
+        return;
+    }
+    $state['checked'] = time();
+
+    $headers = [
+        'Authorization: Bearer ' . $cfg['token'],
+        'Accept: application/vnd.github+json',
+        'X-GitHub-Api-Version: 2022-11-28',
+        'User-Agent: portfolio-index',
+    ];
+
+    $seen = $state['seen'] ?? [];
+    $new  = $seen;
+    foreach ($projects as $p) {
+        if ($p['type'] !== 'github') {
+            continue;
+        }
+        $slug = strtolower($p['github']['owner'] . '/' . $p['github']['repo']);
+        $ch = curl_init("https://api.github.com/repos/$slug");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_HTTPHEADER     => $headers,
+        ]);
+        $body = curl_exec($ch);
+        curl_close($ch);
+        $data = json_decode((string) $body, true);
+        if (!empty($data['pushed_at'])) {
+            $new[$slug] = $data['pushed_at'];
+        }
+    }
+
+    if ($new !== $seen) {
+        $ch = curl_init("https://api.github.com/repos/{$cfg['repo']}/actions/workflows/{$cfg['file']}/dispatches");
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode(['ref' => $cfg['ref']]),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_HTTPHEADER     => array_merge($headers, ['Content-Type: application/json']),
+        ]);
+        curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code === 204) {
+            $state['seen'] = $new;
+        }
+    }
+
+    @file_put_contents($stateFile, json_encode($state));
+}
 
 /* ---------------------------------------------------------------
  * View helpers
