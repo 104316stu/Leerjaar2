@@ -59,6 +59,7 @@ jobs:
       - name: Write server config from secret
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
+          DB_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           mkdir -p includes
           cat > includes/config.local.php <<EOF
@@ -68,6 +69,7 @@ jobs:
               'repo'  => '$GITHUB_REPOSITORY',
               'file'  => 'deploy.yml',
               'ref'   => 'main',
+              'db_password' => '$DB_PASSWORD',
           ];
           EOF
 
