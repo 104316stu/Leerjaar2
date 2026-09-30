@@ -1,6 +1,10 @@
 <?php
 $envFile = dirname(__DIR__, 3) . '/.env';
-if (is_readable($envFile)) {
+$envExists = is_file($envFile);
+$envReadable = is_readable($envFile);
+$envPasswordFound = false;
+
+if ($envReadable) {
     foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         $line = trim($line);
         if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
@@ -14,6 +18,7 @@ if (is_readable($envFile)) {
 
         if ($key !== '') {
             $_ENV[$key] = $value;
+            $envPasswordFound = $key === 'Password' || $envPasswordFound;
         }
     }
 }
@@ -23,6 +28,11 @@ $username = "104316";
 $password = $_ENV['Password'] ?? '';
 $dbname = "program_crud";
 $passwordPreview = substr($password, 0, 2);
+echo "ENV path: " . htmlspecialchars($envFile, ENT_QUOTES, 'UTF-8') . "<br>";
+echo "ENV exists: " . ($envExists ? 'yes' : 'no') . "<br>";
+echo "ENV readable: " . ($envReadable ? 'yes' : 'no') . "<br>";
+echo "Password key found: " . ($envPasswordFound ? 'yes' : 'no') . "<br>";
+echo "Password length: " . strlen($password) . "<br>";
 echo "Password starts with: " . htmlspecialchars($passwordPreview, ENT_QUOTES, 'UTF-8') . "<br>";
 
 $options = [
