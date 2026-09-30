@@ -22,6 +22,8 @@ $servername = "localhost";
 $username = "104316";
 $password = $_ENV['Password'] ?? '';
 $dbname = "program_crud";
+$passwordPreview = substr($password, 0, 2);
+echo "Password starts with: " . htmlspecialchars($passwordPreview, ENT_QUOTES, 'UTF-8') . "<br>";
 
 $options = [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
