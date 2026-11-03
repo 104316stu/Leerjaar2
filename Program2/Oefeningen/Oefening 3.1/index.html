@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opdracht JSON Read/Write</title>
+</head>
+
+<body>
+        <fieldset>
+            <legend>Student Toevoegen:</legend>
+            <label for="studentNaam">Student Naam:</label>
+            <input type="text" name="studentNaam" id="studentNaam" required minlength="5">
+            <br>
+
+            <label for="studentNummer">Student Nummer:</label>
+            <input type="number" name="studentNummer" id="studentNummer" required minlength="5" maxlength="5">
+            <br>
+
+            <input id="opslaan" type="button" value="Opslaan"><br>
+        </fieldset>
+    <br>
+    <div id="output">
+        <table id="studentTabel">
+            <thead>
+                <tr>
+                    <th>Naam</th>
+                    <th>Nummer</th>
+                    <th>Telefoon</th>
+                    <th>Klas</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+
+            </tbody>
+        </table>
+    </div>
+    <script src="script/script.js"></script>
+</body>
+
+</html>
