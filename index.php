@@ -77,7 +77,6 @@ foreach ($projects as &$p) {
     }
 }
 unset($p);
-maybe_deploy($projects);
 
 usort($projects, fn ($a, $b) => [$a['category'], $a['title']] <=> [$b['category'], $b['title']]);
 
@@ -184,3 +183,9 @@ function readme_html(string $html, string $folder): string
 }
 
 require __DIR__ . '/views/index_view.php';
+
+// Send the page to the visitor first, then check GitHub, so nobody waits on the API.
+if (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();
+}
+maybe_deploy($projects);

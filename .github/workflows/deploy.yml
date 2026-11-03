@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Pick up changes in linked repos even when nobody visits the main page.
+  # Only changed files are uploaded, so a run without changes is cheap.
+  schedule:
+    - cron: '*/15 * * * *'
 
 concurrency:
   group: ftp-deploy
