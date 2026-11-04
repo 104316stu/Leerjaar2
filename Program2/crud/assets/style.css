@@ -1,0 +1,7 @@
+.form-narrow {
+    max-width: 560px;
+}
+
+.message-text {
+    white-space: pre-wrap;
+}

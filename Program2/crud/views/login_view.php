@@ -1,21 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <h1>Login</h1>
-    <form method="POST" action="./includes/login.php">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
+<?php require __DIR__ . '/partials/header.php'; ?>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
+<h1>Login</h1>
+<?php require __DIR__ . '/partials/errors.php'; ?>
 
-        <button type="submit">Login</button>
-    </form>
-    <a href="./views/signup_view.php">Dont have an account? Sign up</a>
-</body>
-</html>
+<form action="login_process.php" method="post" class="form-narrow">
+    <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+
+    <div class="mb-3">
+        <label class="form-label" for="username">Username</label>
+        <input class="form-control" type="text" id="username" name="username" value="<?= h($enteredUsername) ?>" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control" type="password" id="password" name="password" required>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Login</button>
+    <a class="btn btn-link" href="signup.php">Don't have an account? Sign up</a>
+</form>
+
+<?php require __DIR__ . '/partials/footer.php'; ?>
