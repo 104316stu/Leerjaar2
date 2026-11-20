@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eindopdracht</title>
+</head>
+
+<body>
+        <fieldset>
+            <legend>Album Toevoegen:</legend>
+            <label for="albumTitel">Titel:</label>
+            <input type="text" name="albumTitel" id="albumTitel" required maxlength="100">
+            <br>
+
+            <label for="albumArtiest">Artiest:</label>
+            <input type="text" name="albumArtiest" id="albumArtiest" required maxlength="100">
+            <br>
+
+            <label for="albumJaartal">Jaartal:</label>
+            <input type="number" name="albumJaartal" id="albumJaartal" required min="1900" max="2026">
+            <br>
+
+            <label for="albumGenre">Genre:</label>
+            <input type="text" name="albumGenre" id="albumGenre" required maxlength="50">
+            <br>
+
+            <label for="albumNummers">Nummers:</label>
+            <textarea name="albumNummers" id="albumNummers"></textarea>
+            <br>
+
+            <input id="opslaan" type="button" value="Opslaan"><br>
+        </fieldset>
+    <p id="uitvoer"></p>
+    <div id="output">
+        <table id="albumTabel">
+            <thead>
+                <tr>
+                    <th>Titel</th>
+                    <th>Artiest</th>
+                    <th>Jaartal</th>
+                    <th>Genre</th>
+                    <th>Nummers</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+
+            </tbody>
+        </table>
+    </div>
+    <script src="script/script.js"></script>
+</body>
+
+</html>
