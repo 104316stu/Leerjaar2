@@ -1,0 +1,26 @@
+# Copy this file to .github/workflows/notify-portfolio.yml in a linked repo
+# (for example hamzaafkir61-svg/ontkoking-). After every push to main it asks
+# 104316stu/Leerjaar2 to deploy, so the change is live within about a minute.
+#
+# The linked repo needs one secret, PORTFOLIO_TOKEN: a fine-grained GitHub token
+# with access to only 104316stu/Leerjaar2 and the permission "Contents: Read and write".
+
+name: Notify portfolio
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask Leerjaar2 to deploy
+        env:
+          TOKEN: ${{ secrets.PORTFOLIO_TOKEN }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/104316stu/Leerjaar2/dispatches \
+            -d "{\"event_type\":\"linked-repo-updated\",\"client_payload\":{\"repo\":\"$GITHUB_REPOSITORY\"}}"

@@ -1,0 +1,8 @@
+{
+    "titel": "Eindpresentatie",
+    "beschrijving": "Experimenten en een prototype voor de eindpresentatie, na een bezoek aan de Gevangenpoort.",
+    "status": "bezig",
+    "onderdelen": [
+        { "titel": "Bewijs museumbezoek", "link": "BewijsMuseum.png" }
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "titel": "ES6 · Les 1",
+    "beschrijving": "Opdrachten over let, const en template literals.",
+    "link": "Opdracht 1/html.html",
+    "onderdelen": [
+        { "titel": "Opdracht 1", "link": "Opdracht 1/html.html" },
+        { "titel": "Opdracht 2", "link": "Opdracht 2/html.html" },
+        { "titel": "Opdracht 3", "link": "Opdracht 3/html.html" }
+    ]
+}

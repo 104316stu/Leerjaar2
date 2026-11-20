@@ -4,81 +4,102 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Leerjaar 2 · 104316</title>
+<meta name="description" content="Schoolprojecten van leerjaar 2 op het GLR, per vak, met een live link naar elk project.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Leerjaar 2 · 104316">
+<meta property="og:description" content="Schoolprojecten van leerjaar 2 op het GLR, per vak.">
+<meta property="og:url" content="<?= e($siteUrl) ?>">
+<?php if ($ogImage): ?>
+<meta property="og:image" content="<?= e($ogImage) ?>">
+<?php endif; ?>
+<meta name="theme-color" content="#141414">
+<link rel="icon" href="<?= e(asset('assets/favicon.svg')) ?>" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="<?= e(asset('assets/style.css')) ?>">
+<script src="<?= e(asset('assets/app.js')) ?>" defer></script>
 </head>
 <body>
 
-<header class="top">
+<header class="masthead">
+  <p class="kicker">Software developer · GLR</p>
   <h1>Leerjaar 2<br><span>104316</span></h1>
+  <p class="intro">Alles wat ik dit jaar maak, per vak. Elk project opent live, zoals het nu op de server staat.</p>
+  <dl class="stats">
+    <div><dt>Projecten</dt><dd><?= count($projects) ?></dd></div>
+    <div><dt>Vakken</dt><dd><?= count($groups) ?></dd></div>
+    <?php if ($lastUpdate): ?>
+      <div><dt>Laatste update</dt><dd><time datetime="<?= e($lastUpdate) ?>"><?= e(ago($lastUpdate)) ?></time></dd></div>
+    <?php endif; ?>
+  </dl>
 </header>
 
 <main>
-<form class="filters" onsubmit="return false">
-  <label for="search" class="filter-label">Zoek</label>
-  <input id="search" type="search" placeholder="bijv. php, intro, crud" autocomplete="off" spellcheck="false">
-  <div class="cats" role="group" aria-label="Map">
-    <button type="button" class="cat is-active" data-cat="">Alle mappen</button>
-    <?php foreach ($categories as $c => $n): ?>
-      <button type="button" class="cat" data-cat="<?= e($c) ?>"><?= e($c) ?>/ <small><?= $n ?></small></button>
+<?php if ($featured): $p = $featured; ?>
+  <section class="featured<?= $p['cover'] ? ' has-cover' : '' ?>" aria-labelledby="featured-title">
+    <?php if ($p['cover']): ?>
+      <a class="featured-cover" href="<?= e($p['link'] ?? '#') ?>" tabindex="-1" aria-hidden="true">
+        <img src="<?= e($p['cover']) ?>" alt="" width="1280" height="800">
+      </a>
+    <?php endif; ?>
+    <div class="featured-body">
+      <p class="label">Uitgelicht</p>
+      <h2 id="featured-title">
+        <?php if ($p['link']): ?><a href="<?= e($p['link']) ?>"><?= e($p['title']) ?></a><?php else: ?><?= e($p['title']) ?><?php endif; ?>
+      </h2>
+      <?php if ($p['description']): ?><p class="desc"><?= e($p['description']) ?></p><?php endif; ?>
+      <?php if ($p['tags']): ?>
+        <ul class="tags"><?php foreach ($p['tags'] as $t): ?><li><?= e($t) ?></li><?php endforeach; ?></ul>
+      <?php endif; ?>
+      <p class="actions">
+        <?php if ($p['link']): ?><a class="btn" href="<?= e($p['link']) ?>">Project openen <span aria-hidden="true">→</span></a><?php endif; ?>
+        <?php if ($p['github']): ?><a href="<?= e($p['github']) ?>">Code op GitHub</a><?php endif; ?>
+      </p>
+      <?php if ($p['updated']): ?><p class="meta">Bijgewerkt <?= e(ago($p['updated'])) ?></p><?php endif; ?>
+    </div>
+  </section>
+<?php endif; ?>
+
+<form class="filters" role="search" action="#" data-filters>
+  <label for="search">Zoek</label>
+  <input id="search" type="search" placeholder="Naam, taal of map" autocomplete="off" spellcheck="false">
+  <div class="cats" role="group" aria-label="Vak">
+    <button type="button" class="cat is-active" data-cat="" aria-pressed="true">Alles <small><?= count($projects) ?></small></button>
+    <?php foreach ($groups as $g): ?>
+      <button type="button" class="cat" data-cat="<?= e($g['key']) ?>" aria-pressed="false"><?= e($g['name']) ?> <small><?= count($g['projects']) ?></small></button>
     <?php endforeach; ?>
   </div>
 </form>
 
-<div class="table-wrap">
-<table class="listing">
-  <thead>
-    <tr>
-      <th class="c-name">Project</th>
-      <th class="c-path">Map</th>
-      <th class="c-lang">Taal</th>
-      <th class="c-push">Laatst bewerkt</th>
-      <th class="c-src"></th>
-    </tr>
-  </thead>
-  <tbody id="rows">
-<?php foreach ($projects as $p): ?>
-  <?php if ($p['type'] === 'github'):
-      $r = $p['repo']['data'] ?? null;
-      $hasReadme = !empty($p['readme']['data']);
-      $searchText = strtolower(implode(' ', [$p['title'], $p['folder'], $r['description'] ?? '', $r['language'] ?? '', $p['github']['owner']]));
-  ?>
-    <tr class="row" data-cat="<?= e($p['category']) ?>" data-search="<?= e($searchText) ?>">
-      <td class="c-name">
-        <a class="name" href="<?= e($p['folder']) ?>/"><?= e($r['name'] ?? $p['title']) ?></a>
-        <?php if ($r): ?><div class="desc"><?= e($r['description'] ?: '(geen omschrijving)') ?></div><?php endif; ?>
-        <?php if ($hasReadme): ?>
-          <button type="button" class="readme-toggle" aria-expanded="false">+ README</button>
-        <?php endif; ?>
-      </td>
-      <td class="c-path"><?= e($p['folder']) ?>/</td>
-      <td class="c-lang"><?= e($r['language'] ?? '–') ?></td>
-      <td class="c-push" title="<?= e($r['pushed_at'] ?? '') ?>"><?= $r ? e(ago($r['pushed_at'])) : '–' ?></td>
-      <td class="c-src"><a href="<?= e($p['folder']) ?>/">Openen</a></td>
-    </tr>
-    <?php if ($hasReadme): ?>
-    <tr class="readme-row" data-cat="<?= e($p['category']) ?>" hidden>
-      <td colspan="5"><div class="readme"><?= readme_html($p['readme']['data'], $p['folder']) ?></div></td>
-    </tr>
-    <?php endif; ?>
-  <?php else: ?>
-    <tr class="row" data-cat="<?= e($p['category']) ?>" data-search="<?= e(strtolower($p['title'] . ' ' . $p['folder'])) ?>">
-      <td class="c-name"><a class="name" href="<?= e($p['link']) ?>"><?= e($p['title']) ?>/</a></td>
-      <td class="c-path"><?= e($p['folder']) ?>/</td>
-      <td class="c-lang">–</td>
-      <td class="c-push">–</td>
-      <td class="c-src"><a href="<?= e($p['link']) ?>">Openen</a></td>
-    </tr>
-  <?php endif; ?>
+<?php foreach ($groups as $g): ?>
+  <section class="vak" data-vak="<?= e($g['key']) ?>" id="vak-<?= e(strtolower($g['key'])) ?>" aria-labelledby="h-<?= e(strtolower($g['key'])) ?>">
+    <header class="vak-head">
+      <span class="vak-nr" aria-hidden="true"><?= e($g['nr']) ?></span>
+      <h2 id="h-<?= e(strtolower($g['key'])) ?>"><?= e($g['name']) ?></h2>
+      <span class="vak-count"><?= count($g['projects']) ?> <?= count($g['projects']) === 1 ? 'project' : 'projecten' ?></span>
+    </header>
+    <ol class="projects">
+      <?php foreach ($g['projects'] as $p): ?>
+        <?php require __DIR__ . '/partials/project.php'; ?>
+      <?php endforeach; ?>
+    </ol>
+  </section>
 <?php endforeach; ?>
-  </tbody>
-</table>
-</div>
-<p class="empty" id="empty" hidden>Geen project gevonden. Probeer een ander woord of kies een andere map.</p>
+
+<p class="empty" data-empty hidden>Geen project gevonden. Probeer een ander woord of kies een ander vak.</p>
 </main>
 
-<script src="assets/app.js" defer></script>
+<footer class="site-foot">
+  <p>
+    <?php if ($lastUpdate): ?>
+      Laatste deploy <time datetime="<?= e($lastUpdate) ?>"><?= e(ago($lastUpdate)) ?></time><?php if ($buildSha): ?> · <code><?= e($buildSha) ?></code><?php endif; ?>
+    <?php else: ?>
+      Nog geen deploy-informatie.
+    <?php endif; ?>
+  </p>
+  <p><a href="#">Naar boven</a></p>
+</footer>
+
 </body>
 </html>

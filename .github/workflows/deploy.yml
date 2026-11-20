@@ -4,14 +4,29 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Pick up changes in linked repos even when nobody visits the main page.
-  # Only changed files are uploaded, so a run without changes is cheap.
+    inputs:
+      full:
+        description: 'Alles opnieuw uploaden en alle covers opnieuw maken'
+        type: boolean
+        default: false
+  # Started by deploy-check.php, or by a linked repo right after its own push
+  # (see .github/templates/notify-portfolio.yml).
+  repository_dispatch:
+    types: [linked-repo-updated]
   schedule:
-    - cron: '*/15 * * * *'
+    # Fallback only: GitHub often starts these late. deploy-check.php is the fast path.
+    - cron: '17 * * * *'
+    # Sunday night: upload everything again, so files that drifted on the server get replaced.
+    - cron: '40 3 * * 0'
 
 concurrency:
   group: ftp-deploy
   cancel-in-progress: false
+
+env:
+  SITE_URL: https://104316.stu.sd-lab.nl
+  FTP_SERVER: 145.118.2.73
+  FULL: ${{ inputs.full == true || github.event.schedule == '40 3 * * 0' }}
 
 jobs:
   deploy:
@@ -19,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history, for the "last changed" date of each folder
 
       # Every "<folder>/<name>.git" file holds a GitHub URL. Clone that repo and
       # put its files in that folder, so the folder becomes a working page.
@@ -34,6 +51,7 @@ jobs:
           if [ -n "$GH_TOKEN" ]; then
             git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
           fi
+          : > "$RUNNER_TEMP/linked.tsv"
           find . -path ./.git -prune -o -type f -name '*.git' -print | while read -r file; do
             dir=$(dirname "$file")
             url=$(tr -d '[:space:]' < "$file")
@@ -48,6 +66,8 @@ jobs:
               if grep -qs 'filter=lfs' "$tmp/.gitattributes"; then
                 git -C "$tmp" lfs pull || echo "::warning file=$file::lfs pull failed for $url"
               fi
+              # remember the commit, for the build info on the site
+              printf '%s\t%s\t%s\t%s\n' "${dir#./}" "$url" "$(git -C "$tmp" rev-parse HEAD)" "$(git -C "$tmp" log -1 --format=%cI)" >> "$RUNNER_TEMP/linked.tsv"
               rm -rf "$tmp/.git" "$tmp/.github"
               prefix="/${dir#./}/"
               find "$tmp" -type f \( -name '*.css' -o -name '*.html' -o -name '*.htm' -o -name '*.php' -o -name '*.js' \) -print0 |
@@ -78,10 +98,16 @@ jobs:
             mv /tmp/gd.json cache/github-data.json
           done
 
+      # cache/build.json: which commit is live, when, and when each project folder last changed.
+      # The home page shows this ("Laatste deploy …", "Bijgewerkt …", the "nieuw" label).
+      - name: Write build info
+        run: python3 .github/scripts/build_info.py "$RUNNER_TEMP/linked.tsv" cache/build.json
+
       - name: Write server config from secret
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           DB_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          CHECK_KEY: ${{ secrets.DEPLOY_CHECK_KEY }}
         run: |
           mkdir -p includes
           cat > includes/config.local.php <<EOF
@@ -92,13 +118,27 @@ jobs:
               'file'  => 'deploy.yml',
               'ref'   => 'main',
               'db_password' => '$DB_PASSWORD',
+              'check_key'   => '$CHECK_KEY',
           ];
           EOF
+
+      # The FTP action only uploads what its state file says has changed. Removing that
+      # file makes it upload everything again. It never deletes files on the server for this.
+      - name: Full upload (weekly or on request)
+        if: env.FULL == 'true'
+        env:
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          curl -sS --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/" \
+            -Q "DELE httpdocs/.ftp-deploy-sync-state.json" -o /dev/null \
+            && echo "state file removed, everything will be uploaded" \
+            || echo "no state file on the server"
 
       - name: Sync changed files to httpdocs
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: 145.118.2.73
+          server: ${{ env.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
@@ -107,8 +147,41 @@ jobs:
           server-dir: httpdocs/
           state-name: .ftp-deploy-sync-state.json
           dangerous-clean-slate: false
+          # assets/covers is filled by the cover step below, straight on the server,
+          # so the sync must not touch (or delete) it.
           exclude: |
             **/.git*
             **/.git*/**
             **/.github/**
             **/node_modules/**
+            assets/covers/**
+
+      # Opens every project on the live site and every file those pages load.
+      # A 404, a 500 or a PHP error fails this run, and GitHub emails you about it.
+      - name: Check the live site
+        run: python3 .github/scripts/smoke_test.py "$SITE_URL"
+
+      # A screenshot of each project becomes its cover on the home page.
+      # Normally only for projects without one; on a full run, all of them again.
+      - name: Make covers
+        env:
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          python3 .github/scripts/covers.py "$SITE_URL" "$FULL" > "$RUNNER_TEMP/shots.tsv"
+          if [ ! -s "$RUNNER_TEMP/shots.tsv" ]; then echo "all projects have a cover"; exit 0; fi
+          cat "$RUNNER_TEMP/shots.tsv"
+          sudo apt-get install -y -qq webp > /dev/null
+          npx -y playwright@1.49.1 install --with-deps chromium > /dev/null
+          mkdir -p "$RUNNER_TEMP/covers"
+          while IFS=$'\t' read -r slug url; do
+            png="$RUNNER_TEMP/covers/$slug.png"
+            webp="$RUNNER_TEMP/covers/$slug.webp"
+            if npx -y playwright@1.49.1 screenshot --viewport-size=1280,800 --wait-for-timeout=1500 "$url" "$png" > /dev/null \
+              && cwebp -quiet -q 80 -resize 960 0 "$png" -o "$webp"; then
+              curl -sS --ftp-create-dirs -T "$webp" --user "$FTP_USERNAME:$FTP_PASSWORD" \
+                "ftp://$FTP_SERVER/httpdocs/assets/covers/$slug.webp" && echo "cover: $slug"
+            else
+              echo "::warning::no cover for $slug ($url)"
+            fi
+          done < "$RUNNER_TEMP/shots.tsv"

@@ -1,0 +1,6 @@
+{
+    "titel": "Ontkoking",
+    "beschrijving": "Receptensite met gerechten uit verschillende culturen. Account maken, eigen recepten plaatsen en bewerken, zoeken op naam of ingrediënt. Groepsproject.",
+    "tags": ["PHP", "SQLite", "groepsproject"],
+    "uitgelicht": true
+}

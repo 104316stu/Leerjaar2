@@ -1,0 +1,5 @@
+{
+    "titel": "Message board",
+    "beschrijving": "Berichtenbord met accounts: berichten plaatsen, lezen, bewerken en verwijderen (CRUD).",
+    "tags": ["PHP", "MySQL", "eindopdracht"]
+}
