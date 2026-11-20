@@ -36,7 +36,9 @@ if os.path.exists(linked_file):
 for path in git("ls-files", "-z").split("\0"):
     folder, _, name = path.rpartition("/")
     if folder and name in MARKERS and folder not in folders:
-        date = git("log", "-1", "--format=%cI", "--", folder).strip()
+        # changes to project.json alone (title, description) do not count as work on the project
+        date = git("log", "-1", "--format=%cI", "--", folder, f":(exclude){folder}/project.json").strip()
+        date = date or git("log", "-1", "--format=%cI", "--", folder).strip()
         if date:
             folders[folder] = date
 
