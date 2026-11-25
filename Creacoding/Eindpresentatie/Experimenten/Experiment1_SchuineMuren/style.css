@@ -1,0 +1,66 @@
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: black;
+}
+
+/* elk vlak is een div over het hele scherm, met clip-path schuin afgeknipt */
+.vlak {
+  position: absolute;
+  inset: 0;
+}
+
+.plafond {
+  background: #2e2219;
+  clip-path: polygon(0 0, 100% 0, 72% 6%, 28% 6%);
+}
+
+.achter {
+  background: #d9d4ca;
+  clip-path: polygon(28% 6%, 72% 6%, 72% 46%, 28% 46%);
+}
+
+.links {
+  background: #bdb7ab;
+  clip-path: polygon(0 0, 28% 6%, 28% 46%, 0 85%);
+}
+
+.rechts {
+  background: #bdb7ab;
+  clip-path: polygon(100% 0, 72% 6%, 72% 46%, 100% 85%);
+}
+
+.vloer {
+  background:
+    repeating-linear-gradient(90deg, #4a2214 0 2px, transparent 2px 60px),
+    #8a4026;
+  clip-path: polygon(28% 46%, 72% 46%, 100% 85%, 100% 100%, 0 100%, 0 85%);
+}
+
+.schilderij {
+  position: absolute;
+  border: 8px solid #5c3a21;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+.a1 { left: 34%; top: 12%; width: 12%; height: 26%; }
+.a2 { left: 54%; top: 12%; width: 12%; height: 26%; }
+
+.l1 {
+  left: 8%; top: 14%; width: 12%; height: 42%;
+  border: none;
+  padding: 8px;
+  background: #5c3a21;
+  /* schuin gemaakt met een trapezium, net als de muren */
+  clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
+}
+
+.r1 {
+  right: 8%; top: 14%; width: 12%; height: 42%;
+  border: none;
+  padding: 8px;
+  background: #5c3a21;
+  clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 88%);
+}

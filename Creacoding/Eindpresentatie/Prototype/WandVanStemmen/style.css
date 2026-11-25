@@ -1,0 +1,71 @@
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: black;
+  font-family: sans-serif;
+}
+
+.vlak {
+  position: absolute;
+  inset: 0;
+}
+
+/* zelfde kamer als de experimenten, maar donkerder */
+.plafond { background: #1a130e; clip-path: polygon(0 0, 100% 0, 72% 6%, 28% 6%); }
+.achter  { background: #3a3631; clip-path: polygon(28% 6%, 72% 6%, 72% 46%, 28% 46%); }
+.links   { background: #2b2824; clip-path: polygon(0 0, 28% 6%, 28% 46%, 0 85%); }
+.rechts  { background: #2b2824; clip-path: polygon(100% 0, 72% 6%, 72% 46%, 100% 85%); }
+
+.vloer {
+  background:
+    repeating-linear-gradient(90deg, #2a140c 0 2px, transparent 2px 60px),
+    #4d2516;
+  clip-path: polygon(28% 46%, 72% 46%, 100% 85%, 100% 100%, 0 100%, 0 85%);
+}
+
+.wand {
+  position: absolute;
+  left: 30%;
+  top: 14%;
+  width: 40%;
+  height: 26%;
+  background: #3b2617;
+  display: flex;
+}
+
+.naam {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b5a4a;
+  font-size: 1.3vw;
+  cursor: pointer;
+  transition: color 0.6s, background 0.6s;
+}
+
+.naam span {
+  font-size: 0.9vw;
+  margin-top: 6px;
+}
+
+/* spot aan */
+.naam:hover,
+.naam.aan {
+  color: #fff3dd;
+  background: radial-gradient(ellipse at center, rgba(255, 220, 160, 0.6) 0%, rgba(255, 220, 160, 0) 75%);
+  text-shadow: 0 0 6px black;
+}
+
+#verhaal {
+  position: absolute;
+  top: 60%;
+  left: 25%;
+  width: 50%;
+  text-align: center;
+  color: #e9e4da;
+  font-size: 18px;
+  line-height: 1.5;
+}
