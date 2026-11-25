@@ -1,64 +1,49 @@
-// Filter projects by vak and search text. The choice is kept in the URL (?vak=…&q=…)
-// so a filtered view can be shared or reloaded.
-const form     = document.querySelector('[data-filters]');
-const search   = document.getElementById('search');
-const cats     = document.querySelectorAll('.cat');
-const sections = document.querySelectorAll('.vak');
-const empty    = document.querySelector('[data-empty]');
-let activeCat  = '';
+// Search through every vak, folder, project and file. The query is kept in the
+// URL (?q=…) so a search can be shared or reloaded.
+const form      = document.querySelector('[data-search-form]');
+const search    = document.getElementById('search');
+const view      = document.getElementById('view');
+const results   = document.getElementById('results');
+const noResults = document.getElementById('no-results');
+const items     = results.querySelectorAll('li');
 
-function filter() {
-  const q = search.value.trim().toLowerCase();
+function runSearch() {
+  // Every word has to match, so "oop 1.2" finds Opdracht 1.2 in OOP.
+  const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+  const searching = words.length > 0;
   let shown = 0;
 
-  sections.forEach(section => {
-    let inSection = 0;
-    section.querySelectorAll('.project').forEach(item => {
-      const ok = (!activeCat || item.dataset.vak === activeCat) && (!q || item.dataset.search.includes(q));
-      item.hidden = !ok;
-      if (!ok) item.querySelector('details[open]')?.removeAttribute('open');
-      if (ok) inSection++;
-    });
-    section.hidden = inSection === 0;
-    shown += inSection;
+  items.forEach(item => {
+    const ok = searching && words.every(word => item.dataset.search.includes(word));
+    item.hidden = !ok;
+    if (ok) shown++;
   });
 
-  empty.hidden = shown > 0;
+  view.hidden = searching;
+  results.hidden = !searching;
+  noResults.hidden = shown > 0;
 
-  const params = new URLSearchParams();
-  if (activeCat) params.set('vak', activeCat);
-  if (q) params.set('q', q);
-  const query = params.toString();
-  history.replaceState(null, '', query ? '?' + query : location.pathname);
+  const url = new URL(location.href);
+  if (searching) url.searchParams.set('q', search.value.trim());
+  else url.searchParams.delete('q');
+  if (url.href !== location.href) history.replaceState(null, '', url);
 }
 
-function setCat(value) {
-  activeCat = value;
-  cats.forEach(btn => {
-    const on = btn.dataset.cat === value;
-    btn.classList.toggle('is-active', on);
-    btn.setAttribute('aria-pressed', String(on));
-  });
-}
-
-search.addEventListener('input', filter);
+form.hidden = false;
 form.addEventListener('submit', event => event.preventDefault());
+search.addEventListener('input', runSearch);
 
-cats.forEach(btn => btn.addEventListener('click', () => {
-  setCat(btn.dataset.cat);
-  filter();
-}));
-
-// "/" jumps to the search field, like on GitHub.
+// "/" jumps to the search field, like on GitHub. Escape clears it.
 document.addEventListener('keydown', event => {
-  if (event.key === '/' && document.activeElement !== search && !event.target.closest('input, textarea')) {
+  if (event.key === '/' && !event.target.closest('input, textarea')) {
     event.preventDefault();
     search.focus();
+  } else if (event.key === 'Escape' && event.target === search) {
+    search.value = '';
+    runSearch();
   }
 });
 
 // Start from the URL.
-const start = new URLSearchParams(location.search);
-if (start.has('vak') && [...cats].some(btn => btn.dataset.cat === start.get('vak'))) setCat(start.get('vak'));
-if (start.has('q')) search.value = start.get('q');
-if (activeCat || search.value) filter();
+search.value = new URLSearchParams(location.search).get('q') ?? '';
+if (search.value) runSearch();

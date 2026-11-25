@@ -1,25 +1,39 @@
 <?php
 require __DIR__ . '/includes/helpers.php';
-require __DIR__ . '/includes/projects.php';
+require __DIR__ . '/includes/layers.php';
 require __DIR__ . '/includes/deploy.php';
 
 $root     = __DIR__;
-$build    = load_build($root);
-$projects = load_projects($root, $build);
+$projects = load_projects($root, load_build($root));
 $groups   = group_by_subject($projects);
+$layers   = build_layers($root, $groups);
 
+// ?vak=Program2/OOP. Only looked up in $layers, so it never reaches the filesystem.
+$layerKey = is_string($_GET['vak'] ?? null) ? trim($_GET['vak'], '/') : '';
+$isHome   = $layerKey === '';
+$current  = $layers[$layerKey] ?? null;
+if (!$isHome && !$current) {
+    http_response_code(404);
+}
+
+$searchItems = search_index($layers);
+
+$pageTitle = match (true) {
+    $isHome          => 'Leerjaar 2 · 104316',
+    $current !== null => $current['title'] . ' · Leerjaar 2',
+    default          => 'Niet gevonden · Leerjaar 2',
+};
+
+// Full addresses for link previews. The image is the project's cover, or that of the
+// newest project with "uitgelicht" in its project.json.
 $featured = array_values(array_filter($projects, fn ($p) => $p['featured']));
 usort($featured, fn ($a, $b) => ($b['updated'] ?? 0) <=> ($a['updated'] ?? 0));
-$featured = $featured[0] ?? null;
-
-$lastUpdate = $build['time'] ?? null;
-$buildSha   = isset($build['sha']) ? substr($build['sha'], 0, 7) : null;
-
-// Full address of the site, for link previews (og:image needs an absolute URL).
-$siteUrl  = (($_SERVER['HTTPS'] ?? '') === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/';
-$ogImage  = $featured && $featured['cover'] && !preg_match('~^https?://~', $featured['cover'])
-    ? $siteUrl . $featured['cover']
-    : ($featured['cover'] ?? null);
+$siteUrl = (($_SERVER['HTTPS'] ?? '') === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/';
+$pageUrl = $siteUrl . ($current ? substr(layer_url($layerKey), 2) : '');
+$ogImage = $current['project']['cover'] ?? $featured[0]['cover'] ?? null;
+if ($ogImage && !preg_match('~^https?://~', $ogImage)) {
+    $ogImage = $siteUrl . $ogImage;
+}
 
 require __DIR__ . '/views/index_view.php';
 

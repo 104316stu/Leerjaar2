@@ -188,6 +188,7 @@ function load_projects(string $root, ?array $build): array
             'status'      => $m['status'] ?? '',
             'featured'    => !empty($m['uitgelicht']),
             'link'        => $link,
+            'has_page'    => $f['index'] || $gh, // otherwise its folder can be looked into, see layers.php
             'cover'       => $cover,
             'auto_cover'  => $autoCover,
             'needs_shot'  => $link && empty($m['cover']) && !str_starts_with($link, 'http'),

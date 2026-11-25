@@ -31,6 +31,15 @@ Een map wordt een project op de homepage als er een van deze bestanden in staat:
 Alles mag weg. Zonder `titel` komt de naam van de repo of map, zonder `beschrijving` de omschrijving op GitHub.
 `link` en `cover` zijn relatief aan de map van het project. Zonder `cover` maakt de deploy zelf een screenshot.
 De namen en volgorde van de vakken staan in `includes/subjects.php`.
+`tags`, `periode` en `status` worden niet getoond (op tags kun je wel zoeken). De cover van een
+project met `uitgelicht` is het plaatje als je de homepage deelt.
+
+## Lagen
+
+De homepage toont alleen de vakken. Elk vak en elke map heeft een eigen pagina, bijvoorbeeld `?vak=Program2/OOP`.
+Een nieuwe map verschijnt vanzelf zodra er een project in staat.
+Van een project met alleen een `project.json` (geen eigen pagina of `.git`) worden de submappen, pagina's,
+afbeeldingen en documenten getoond.
 
 ## Hoe updates live komen
 

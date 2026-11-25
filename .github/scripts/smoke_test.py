@@ -1,7 +1,8 @@
 """Check the live site after a deploy.
 
-Opens the home page, every project it links to, the pages inside each project
-(one click deeper, same folder only) and every file those pages load
+Opens the home page, the page of each vak and folder (?vak=...), every project
+they link to, the pages inside each project (one click deeper, same folder only)
+and every file those pages load
 (CSS, JS, images, audio, and url() inside the CSS).
 Exits with 1 when something returns 4xx/5xx or a page shows a PHP error,
 so the GitHub run fails and you get an email.
@@ -24,7 +25,7 @@ UA = "leerjaar2-smoke-test"
 MAX_PAGES = 80
 PHP_ERROR = re.compile(r"<b>(Fatal error|Parse error)</b>|Fatal error: |Uncaught \w+Exception")
 PHP_WARNING = re.compile(r"<b>(Warning|Notice|Deprecated)</b>:")
-FILE_EXT = re.compile(r"\.(png|jpe?g|gif|webp|svg|ico|pdf|mp3|mp4|webm|zip|js|json|txt|md)$", re.I)
+FILE_EXT = re.compile(r"\.(png|jpe?g|gif|webp|svg|ico|pdf|mp3|mp4|webm|zip|js|json|txt|md|docx|pptx|xlsx)$", re.I)
 CSS_URL = re.compile(r"""url\(\s*['"]?([^'")]+)['"]?\s*\)""")
 # Links that change something when opened are never followed. We are not logged in,
 # but a check must never be able to delete anything or log anyone out.
@@ -115,13 +116,15 @@ def check(item):
             u = resolve(url, ref)
             if u:
                 found.append((u, "css" if kind_of(u) == "css" else "file", depth, scope))
-        # depth 0 = home page, 1 = a project, 2 = a page inside that project (not followed further)
+        # depth 0 = home page and the ?vak= pages, 1 = a project, 2 = a page inside it (not followed further)
         if depth < 2:
             for ref in parser.pages:
                 u = resolve(url, ref)
                 if not u or UNSAFE.search(u):
                     continue
-                if depth == 0:
+                if depth == 0 and u.startswith(SITE + "?vak="):
+                    found.append((u, "page", 0, "/"))
+                elif depth == 0:
                     found.append((u, kind_of(u), 1, folder_of(u)))
                 elif urlparse(u).path.startswith(scope):
                     found.append((u, kind_of(u), 2, scope))
